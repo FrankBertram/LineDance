@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Line Dance Verwaltung</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+header h1 span { font-weight: 300; opacity: .85; }
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+}
+
+/* Stats */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--primary);
+}
+
+.stat-card.easy { border-left-color: var(--success); }
+.stat-card.medium { border-left-color: var(--warning); }
+.stat-card.hard { border-left-color: var(--danger); }
+
+.stat-card .stat-num {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-card .stat-label {
+  font-size: .8rem;
+  color: var(--text-light);
+  margin-top: .15rem;
+}
+
+/* Form */
+.form-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+}
+
+.form-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.form-title .edit-badge {
+  font-size: .75rem;
+  background: var(--warning);
+  color: #fff;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group { display: flex; flex-direction: column; }
+.form-group.full { grid-column: 1 / -1; }
+
+.form-group label {
+  font-size: .85rem;
+  font-weight: 500;
+  margin-bottom: .3rem;
+  color: var(--text);
+}
+
+.form-group input,
+.form-group select {
+  padding: .6rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .95rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  transition: border-color .2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+
+.form-group input.error,
+.form-group select.error {
+  border-color: var(--danger);
+}
+
+.error-msg {
+  font-size: .78rem;
+  color: var(--danger);
+  margin-top: .25rem;
+  min-height: 1.1em;
+}
+
+.form-actions {
+  display: flex;
+  gap: .75rem;
+  margin-top: 1rem;
+}
+
+/* Buttons */
+button {
+  font-family: inherit;
+  font-size: .9rem;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: .6rem 1.25rem;
+  transition: background .15s, transform .1s;
+}
+
+button:active { transform: scale(.97); }
+button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-hover); }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-light);
+  border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: var(--bg); }
+
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { background: var(--danger-hover); }
+
+.btn-sm { padding: .4rem .75rem; font-size: .82rem; }
+
+.btn-link {
+  background: none;
+  color: var(--primary);
+  padding: .4rem .75rem;
+  text-decoration: none;
+  font-size: .82rem;
+}
+.btn-link:hover { text-decoration: underline; }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text);
+  color: #fff;
+  padding: .75rem 1.5rem;
+  border-radius: var(--radius);
+  font-size: .9rem;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transition: transform .3s ease, opacity .3s ease;
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast.success { background: var(--success); }
+
+/* Search & Filter */
+.toolbar {
+  display: flex;
+  gap: .75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.toolbar input[type="search"] {
+  flex: 1;
+  min-width: 180px;
+  padding: .6rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .95rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
+.toolbar input[type="search"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+
+.toolbar select {
+  padding: .6rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+}
+
+.toolbar select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Cards */
+.dance-list { display: flex; flex-direction: column; gap: .75rem; }
+
+.dance-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: box-shadow .15s;
+}
+
+.dance-card:hover { box-shadow: var(--shadow-md); }
+
+.dance-thumb {
+  width: 100px;
+  height: 56px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.dance-info { flex: 1; min-width: 0; }
+
+.dance-name {
+  font-weight: 600;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dance-meta {
+  font-size: .82rem;
+  color: var(--text-light);
+  margin-top: .15rem;
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.badge-easy { background: var(--success); }
+.badge-medium { background: var(--warning); }
+.badge-hard { background: var(--danger); }
+
+.dance-actions {
+  display: flex;
+  gap: .4rem;
+  flex-shrink: 0;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-light);
+}
+
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: .75rem; }
+.empty-state p { font-size: .95rem; }
+
+/* Confirm Dialog */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.35);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+
+.overlay.show { opacity: 1; pointer-events: auto; }
+
+.dialog {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  max-width: 380px;
+  width: 90%;
+}
+
+.dialog h3 { margin-bottom: .5rem; font-size: 1.05rem; }
+.dialog p { color: var(--text-light); font-size: .9rem; margin-bottom: 1.25rem; }
+
+.dialog-actions { display: flex; gap: .5rem; justify-content: flex-end; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .form-grid { grid-template-columns: 1fr; }
+  .dance-card { flex-direction: column; align-items: stretch; }
+  .dance-thumb { width: 100%; height: auto; aspect-ratio: 16/9; }
+  .dance-actions { justify-content: flex-end; }
+  .toolbar { flex-direction: column; }
+  .toolbar input[type="search"] { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Line Dance <span>Verwaltung</span></h1>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <section class="stats" aria-label="Statistiken">
+    <div class="stat-card">
+      <div class="stat-num" id="statTotal">0</div>
+      <div class="stat-label">Gesamt</div>
+    </div>
+    <div class="stat-card easy">
+      <div class="stat-num" id="statEasy">0</div>
+      <div class="stat-label">Leicht</div>
+    </div>
+    <div class="stat-card medium">
+      <div class="stat-num" id="statMedium">0</div>
+      <div class="stat-label">Mittel</div>
+    </div>
+    <div class="stat-card hard">
+      <div class="stat-num" id="statHard">0</div>
+      <div class="stat-label">Schwer</div>
+    </div>
+  </section>
+
+  <!-- Form -->
+  <section class="form-section">
+    <div class="form-title">
+      <span id="formTitleText">Neuen Tanz anlegen</span>
+      <span class="edit-badge" id="editBadge" style="display:none">Bearbeiten</span>
+    </div>
+    <form id="danceForm" novalidate>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="danceName">Tanzname *</label>
+          <input type="text" id="danceName" placeholder="z.B. Watermelon Crawl" autocomplete="off">
+          <div class="error-msg" id="errName"></div>
+        </div>
+        <div class="form-group">
+          <label for="danceDifficulty">Schwierigkeitsgrad *</label>
+          <select id="danceDifficulty">
+            <option value="">— Bitte wählen —</option>
+            <option value="Leicht">Leicht</option>
+            <option value="Mittel">Mittel</option>
+            <option value="Schwer">Schwer</option>
+          </select>
+          <div class="error-msg" id="errDifficulty"></div>
+        </div>
+        <div class="form-group full">
+          <label for="danceYoutube">YouTube-Link *</label>
+          <input type="url" id="danceYoutube" placeholder="https://www.youtube.com/watch?v=...">
+          <div class="error-msg" id="errYoutube"></div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" id="btnSubmit">Speichern</button>
+        <button type="button" class="btn-secondary" id="btnCancel" style="display:none">Abbrechen</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Toolbar -->
+  <section class="toolbar" aria-label="Suche und Filter">
+    <input type="search" id="searchInput" placeholder="Tanz suchen…" aria-label="Tanz suchen">
+    <select id="filterDifficulty" aria-label="Nach Schwierigkeitsgrad filtern">
+      <option value="">Alle Schwierigkeitsgrade</option>
+      <option value="Leicht">Leicht</option>
+      <option value="Mittel">Mittel</option>
+      <option value="Schwer">Schwer</option>
+    </select>
+    <select id="sortSelect" aria-label="Sortierung">
+      <option value="name-asc">Name A–Z</option>
+      <option value="name-desc">Name Z–A</option>
+      <option value="difficulty">Schwierigkeitsgrad</option>
+      <option value="date-desc">Neueste zuerst</option>
+      <option value="date-asc">Älteste zuerst</option>
+    </select>
+  </section>
+
+  <!-- Dance List -->
+  <section id="danceList" class="dance-list" aria-label="Tanzliste"></section>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Confirm Dialog -->
+<div class="overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="dialog">
+    <h3 id="confirmTitle">Tanz löschen?</h3>
+    <p id="confirmMsg">Möchtest du diesen Tanz wirklich löschen?</p>
+    <div class="dialog-actions">
+      <button class="btn-secondary btn-sm" id="confirmNo">Abbrechen</button>
+      <button class="btn-danger btn-sm" id="confirmYes">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'lineDanceDances';
+
+const $ = id => document.getElementById(id);
+
+let dances = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let editingId = null;
+let deleteId = null;
+
+// DOM refs
+const form = $('danceForm');
+const nameInput = $('danceName');
+const difficultyInput = $('danceDifficulty');
+const youtubeInput = $('danceYoutube');
+const searchInput = $('searchInput');
+const filterDifficulty = $('filterDifficulty');
+const sortSelect = $('sortSelect');
+const listEl = $('danceList');
+
+// Save to localStorage
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dances));
+}
+
+// YouTube helpers
+function extractYouTubeId(url) {
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?.*v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function isValidUrl(str) {
+  try { new URL(str); return true; } catch { return false; }
+}
+
+function isYouTubeUrl(str) {
+  return /^https?:\/\/(www\.)?(youtube\.com|youtu\.be|m\.youtube\.com)\//i.test(str);
+}
+
+// Toast
+let toastTimer;
+function showToast(msg, type) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '');
+  requestAnimationFrame(() => t.classList.add('show'));
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Validation
+function validate() {
+  let ok = true;
+  $('errName').textContent = '';
+  $('errDifficulty').textContent = '';
+  $('errYoutube').textContent = '';
+  nameInput.classList.remove('error');
+  difficultyInput.classList.remove('error');
+  youtubeInput.classList.remove('error');
+
+  if (!nameInput.value.trim()) {
+    $('errName').textContent = 'Bitte einen Tanznamen eingeben.';
+    nameInput.classList.add('error');
+    ok = false;
+  }
+  if (!difficultyInput.value) {
+    $('errDifficulty').textContent = 'Bitte Schwierigkeitsgrad wählen.';
+    difficultyInput.classList.add('error');
+    ok = false;
+  }
+  const yt = youtubeInput.value.trim();
+  if (!yt) {
+    $('errYoutube').textContent = 'Bitte einen YouTube-Link eingeben.';
+    youtubeInput.classList.add('error');
+    ok = false;
+  } else if (!isValidUrl(yt)) {
+    $('errYoutube').textContent = 'Bitte eine gültige URL eingeben.';
+    youtubeInput.classList.add('error');
+    ok = false;
+  } else if (!isYouTubeUrl(yt)) {
+    $('errYoutube').textContent = 'Bitte einen YouTube-Link eingeben (youtube.com oder youtu.be).';
+    youtubeInput.classList.add('error');
+    ok = false;
+  }
+  return ok;
+}
+
+// Form submit
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  if (!validate()) return;
+
+  const dance = {
+    id: editingId || crypto.randomUUID(),
+    name: nameInput.value.trim(),
+    difficulty: difficultyInput.value,
+    youtube: youtubeInput.value.trim(),
+    created: editingId ? (dances.find(d => d.id === editingId)?.created || new Date().toISOString()) : new Date().toISOString()
+  };
+
+  if (editingId) {
+    const idx = dances.findIndex(d => d.id === editingId);
+    if (idx !== -1) dances[idx] = dance;
+    showToast('Tanz aktualisiert!', 'success');
+  } else {
+    dances.push(dance);
+    showToast('Tanz gespeichert!', 'success');
+  }
+
+  save();
+  resetForm();
+  render();
+});
+
+function resetForm() {
+  editingId = null;
+  form.reset();
+  $('formTitleText').textContent = 'Neuen Tanz anlegen';
+  $('editBadge').style.display = 'none';
+  $('btnCancel').style.display = 'none';
+  $('btnSubmit').textContent = 'Speichern';
+  ['errName','errDifficulty','errYoutube'].forEach(id => $(id).textContent = '');
+  [nameInput, difficultyInput, youtubeInput].forEach(el => el.classList.remove('error'));
+}
+
+$('btnCancel').addEventListener('click', resetForm);
+
+// Edit
+function startEdit(id) {
+  const dance = dances.find(d => d.id === id);
+  if (!dance) return;
+  editingId = id;
+  nameInput.value = dance.name;
+  difficultyInput.value = dance.difficulty;
+  youtubeInput.value = dance.youtube;
+  $('formTitleText').textContent = 'Tanz bearbeiten';
+  $('editBadge').style.display = '';
+  $('btnCancel').style.display = '';
+  $('btnSubmit').textContent = 'Aktualisieren';
+  nameInput.focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Delete
+function requestDelete(id) {
+  deleteId = id;
+  const dance = dances.find(d => d.id === id);
+  $('confirmMsg').textContent = `„${dance?.name}" wirklich löschen? Dies kann nicht rückgängig gemacht werden.`;
+  $('confirmOverlay').classList.add('show');
+  $('confirmNo').focus();
+}
+
+$('confirmYes').addEventListener('click', () => {
+  if (deleteId) {
+    dances = dances.filter(d => d.id !== deleteId);
+    if (editingId === deleteId) resetForm();
+    save();
+    render();
+    showToast('Tanz gelöscht.');
+  }
+  deleteId = null;
+  $('confirmOverlay').classList.remove('show');
+});
+
+$('confirmNo').addEventListener('click', () => {
+  deleteId = null;
+  $('confirmOverlay').classList.remove('show');
+});
+
+$('confirmOverlay').addEventListener('click', e => {
+  if (e.target === $('confirmOverlay')) {
+    deleteId = null;
+    $('confirmOverlay').classList.remove('show');
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('confirmOverlay').classList.contains('show')) {
+    deleteId = null;
+    $('confirmOverlay').classList.remove('show');
+  }
+});
+
+// Filtering, sorting, rendering
+const diffOrder = { 'Leicht': 1, 'Mittel': 2, 'Schwer': 3 };
+
+function getFiltered() {
+  const q = searchInput.value.toLowerCase().trim();
+  const diff = filterDifficulty.value;
+  let list = dances.filter(d => {
+    if (q && !d.name.toLowerCase().includes(q)) return false;
+    if (diff && d.difficulty !== diff) return false;
+    return true;
+  });
+
+  const sort = sortSelect.value;
+  list.sort((a, b) => {
+    switch (sort) {
+      case 'name-asc': return a.name.localeCompare(b.name, 'de');
+      case 'name-desc': return b.name.localeCompare(a.name, 'de');
+      case 'difficulty': return (diffOrder[a.difficulty] || 0) - (diffOrder[b.difficulty] || 0);
+      case 'date-desc': return new Date(b.created) - new Date(a.created);
+      case 'date-asc': return new Date(a.created) - new Date(b.created);
+      default: return 0;
+    }
+  });
+  return list;
+}
+
+function badgeClass(d) {
+  return d === 'Leicht' ? 'badge-easy' : d === 'Mittel' ? 'badge-medium' : 'badge-hard';
+}
+
+function escHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function render() {
+  // Stats
+  $('statTotal').textContent = dances.length;
+  $('statEasy').textContent = dances.filter(d => d.difficulty === 'Leicht').length;
+  $('statMedium').textContent = dances.filter(d => d.difficulty === 'Mittel').length;
+  $('statHard').textContent = dances.filter(d => d.difficulty === 'Schwer').length;
+
+  const filtered = getFiltered();
+
+  if (dances.length === 0) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💃</div>
+        <p>Noch keine Tänze vorhanden.</p>
+        <p style="margin-top:.25rem;font-size:.85rem;">Lege oben deinen ersten Tanz an!</p>
+      </div>`;
+    return;
+  }
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `
+      <div class="empty-state">
+        <p>Keine Tänze gefunden.</p>
+        <p style="margin-top:.25rem;font-size:.85rem;">Versuche andere Suchbegriffe oder Filter.</p>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(d => {
+    const vid = extractYouTubeId(d.youtube);
+    const thumb = vid ? `https://img.youtube.com/vi/${vid}/mqdefault.jpg` : '';
+    const date = d.created ? new Date(d.created).toLocaleDateString('de-DE') : '';
+    return `
+    <article class="dance-card">
+      ${thumb ? `<img class="dance-thumb" src="${thumb}" alt="Vorschau" loading="lazy">` : ''}
+      <div class="dance-info">
+        <div class="dance-name">${escHtml(d.name)}</div>
+        <div class="dance-meta">
+          <span class="badge ${badgeClass(d.difficulty)}">${escHtml(d.difficulty)}</span>
+          ${date ? `<span>${date}</span>` : ''}
+        </div>
+      </div>
+      <div class="dance-actions">
+        <a href="${escHtml(d.youtube)}" target="_blank" rel="noopener noreferrer" class="btn-link btn-sm" title="Video öffnen">▶ Video</a>
+        <button class="btn-secondary btn-sm" onclick="startEdit('${d.id}')" title="Bearbeiten">✎</button>
+        <button class="btn-danger btn-sm" onclick="requestDelete('${d.id}')" title="Löschen">✕</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+searchInput.addEventListener('input', render);
+filterDifficulty.addEventListener('change', render);
+sortSelect.addEventListener('change', render);
+
+render();
+</script>
+</body>
+</html>
