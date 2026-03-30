@@ -69,10 +69,10 @@ header h1 span { font-weight: 300; opacity: .85; }
 .stat-card {
   background: var(--card);
   border-radius: var(--radius);
-  padding: 1rem;
+  padding: .75rem .5rem;
   text-align: center;
   box-shadow: var(--shadow);
-  border-left: 4px solid var(--primary);
+  border-left: 3px solid var(--primary);
 }
 
 .stat-card.easy { border-left-color: var(--success); }
@@ -340,6 +340,57 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   flex-shrink: 0;
 }
 
+/* View Toggle */
+.view-toggle {
+  display: flex;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.view-toggle button {
+  padding: .45rem .7rem;
+  border-radius: 0;
+  background: #fff;
+  color: var(--text-light);
+  border: none;
+  border-right: 1px solid var(--border);
+  font-size: .85rem;
+  line-height: 1;
+}
+
+.view-toggle button:last-child { border-right: none; }
+.view-toggle button.active { background: var(--primary); color: #fff; }
+.view-toggle button:hover:not(.active) { background: var(--bg); }
+
+/* Compact view */
+.dance-list.compact { gap: .35rem; }
+
+.dance-list.compact .dance-card {
+  padding: .5rem .85rem;
+  gap: .6rem;
+}
+
+.dance-list.compact .dance-thumb,
+.dance-list.compact .dance-meta,
+.dance-list.compact .btn-secondary,
+.dance-list.compact .btn-danger { display: none; }
+
+.dance-list.compact .dance-name {
+  font-size: .92rem;
+  font-weight: 500;
+}
+
+.dance-list.compact .dance-actions {
+  gap: 0;
+}
+
+.dance-list.compact .btn-link {
+  font-size: .85rem;
+  padding: .35rem .65rem;
+}
+
 /* Empty state */
 .empty-state {
   text-align: center;
@@ -380,9 +431,39 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .dialog-actions { display: flex; gap: .5rem; justify-content: flex-end; }
 
+/* Backup section */
+.backup-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem;
+  margin-top: 2rem;
+}
+
+.backup-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: .75rem;
+}
+
+.backup-actions {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.backup-hint {
+  font-size: .78rem;
+  color: var(--text-light);
+  margin-top: .6rem;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
-  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stats { grid-template-columns: repeat(4, 1fr); gap: .4rem; }
+  .stat-card { padding: .5rem .25rem; border-left-width: 2px; }
+  .stat-card .stat-num { font-size: 1.3rem; }
+  .stat-card .stat-label { font-size: .68rem; }
   .form-grid { grid-template-columns: 1fr; }
   .dance-card { flex-direction: column; align-items: stretch; }
   .dance-thumb { width: 100%; height: auto; aspect-ratio: 16/9; }
@@ -395,7 +476,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 <body>
 
 <header>
-  <h1>Line Dance <span>Verwaltung</span></h1>
+  <h1>Line Dance <span>Verwaltung</span> <span style="font-size:.65rem;font-weight:400;opacity:.7;margin-left:.5rem">V0.9</span></h1>
 </header>
 
 <div class="container">
@@ -459,6 +540,10 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   <!-- Toolbar -->
   <section class="toolbar" aria-label="Suche und Filter">
     <input type="search" id="searchInput" placeholder="Tanz suchen…" aria-label="Tanz suchen">
+    <div class="view-toggle" role="group" aria-label="Ansicht wechseln">
+      <button type="button" id="viewDetail" class="active" title="Detailliste" aria-pressed="true">&#9776; Detail</button>
+      <button type="button" id="viewCompact" title="Kompaktliste" aria-pressed="false">&#9868; Kompakt</button>
+    </div>
     <select id="filterDifficulty" aria-label="Nach Schwierigkeitsgrad filtern">
       <option value="">Alle Schwierigkeitsgrade</option>
       <option value="Leicht">Leicht</option>
@@ -477,6 +562,17 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   <!-- Dance List -->
   <section id="danceList" class="dance-list" aria-label="Tanzliste"></section>
 
+  <!-- Backup / Restore -->
+  <section class="backup-section" aria-label="Datensicherung">
+    <h2 class="backup-title">Datensicherung</h2>
+    <div class="backup-actions">
+      <button type="button" class="btn-primary btn-sm" id="btnExport">Backup exportieren (JSON)</button>
+      <button type="button" class="btn-secondary btn-sm" id="btnImport">Backup importieren</button>
+      <input type="file" id="fileImport" accept=".json,application/json" hidden aria-label="Backup-Datei auswählen">
+    </div>
+    <p class="backup-hint">Export speichert alle Tänze als JSON-Datei. Beim Import kannst du wählen, ob bestehende Daten ersetzt oder ergänzt werden.</p>
+  </section>
+
 </div>
 
 <!-- Toast -->
@@ -490,6 +586,19 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     <div class="dialog-actions">
       <button class="btn-secondary btn-sm" id="confirmNo">Abbrechen</button>
       <button class="btn-danger btn-sm" id="confirmYes">Löschen</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Mode Dialog -->
+<div class="overlay" id="importOverlay" role="dialog" aria-modal="true" aria-labelledby="importTitle">
+  <div class="dialog">
+    <h3 id="importTitle">Backup importieren</h3>
+    <p>Wie sollen die importierten Daten verarbeitet werden?</p>
+    <div class="dialog-actions" style="flex-wrap:wrap;gap:.4rem">
+      <button class="btn-secondary btn-sm" id="importCancel">Abbrechen</button>
+      <button class="btn-primary btn-sm" id="importMerge">Zusammenführen</button>
+      <button class="btn-danger btn-sm" id="importReplace">Ersetzen</button>
     </div>
   </div>
 </div>
@@ -767,7 +876,101 @@ searchInput.addEventListener('input', render);
 filterDifficulty.addEventListener('change', render);
 sortSelect.addEventListener('change', render);
 
+// View toggle
+let currentView = localStorage.getItem('lineDanceView') || 'detail';
+
+function applyView() {
+  listEl.classList.toggle('compact', currentView === 'compact');
+  $('viewDetail').classList.toggle('active', currentView === 'detail');
+  $('viewCompact').classList.toggle('active', currentView === 'compact');
+  $('viewDetail').setAttribute('aria-pressed', currentView === 'detail');
+  $('viewCompact').setAttribute('aria-pressed', currentView === 'compact');
+}
+
+$('viewDetail').addEventListener('click', () => { currentView = 'detail'; localStorage.setItem('lineDanceView', currentView); applyView(); });
+$('viewCompact').addEventListener('click', () => { currentView = 'compact'; localStorage.setItem('lineDanceView', currentView); applyView(); });
+
+// Backup export
+$('btnExport').addEventListener('click', () => {
+  if (dances.length === 0) { showToast('Keine Tänze zum Exportieren vorhanden.'); return; }
+  const data = JSON.stringify(dances, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const date = new Date().toISOString().slice(0, 10);
+  a.download = `linedance-backup-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`Backup mit ${dances.length} Tänzen exportiert.`, 'success');
+});
+
+// Backup import
+let importedData = null;
+
+$('btnImport').addEventListener('click', () => { $('fileImport').value = ''; $('fileImport').click(); });
+
+$('fileImport').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if (!Array.isArray(parsed)) throw new Error('Kein Array');
+      const valid = parsed.every(d => d.name && d.difficulty && d.youtube);
+      if (!valid) throw new Error('Ungültige Datenstruktur');
+      importedData = parsed;
+      $('importOverlay').classList.add('show');
+    } catch {
+      showToast('Ungültige Backup-Datei. Bitte eine gültige JSON-Datei wählen.');
+    }
+  };
+  reader.readAsText(file);
+});
+
+function closeImportDialog() {
+  importedData = null;
+  $('importOverlay').classList.remove('show');
+}
+
+$('importCancel').addEventListener('click', closeImportDialog);
+
+$('importOverlay').addEventListener('click', e => {
+  if (e.target === $('importOverlay')) closeImportDialog();
+});
+
+$('importReplace').addEventListener('click', () => {
+  if (!importedData) return;
+  dances = importedData.map(d => ({ id: d.id || crypto.randomUUID(), name: d.name, difficulty: d.difficulty, youtube: d.youtube, created: d.created || new Date().toISOString() }));
+  save(); render(); applyView();
+  showToast(`${dances.length} Tänze importiert (ersetzt).`, 'success');
+  closeImportDialog();
+});
+
+$('importMerge').addEventListener('click', () => {
+  if (!importedData) return;
+  const existingIds = new Set(dances.map(d => d.id));
+  const existingNames = new Set(dances.map(d => d.name.toLowerCase()));
+  let added = 0;
+  for (const d of importedData) {
+    const id = d.id || crypto.randomUUID();
+    if (!existingIds.has(id) && !existingNames.has(d.name.toLowerCase())) {
+      dances.push({ id, name: d.name, difficulty: d.difficulty, youtube: d.youtube, created: d.created || new Date().toISOString() });
+      existingIds.add(id);
+      existingNames.add(d.name.toLowerCase());
+      added++;
+    }
+  }
+  save(); render(); applyView();
+  showToast(`${added} neue Tänze hinzugefügt, ${importedData.length - added} übersprungen.`, 'success');
+  closeImportDialog();
+});
+
 render();
+applyView();
 </script>
 </body>
 </html>
