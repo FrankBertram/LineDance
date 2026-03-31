@@ -65,7 +65,7 @@ header h1 span { font-weight: 300; opacity: .85; }
 /* Stats */
 .stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: .75rem;
   margin-bottom: 1.5rem;
 }
@@ -79,6 +79,7 @@ header h1 span { font-weight: 300; opacity: .85; }
   border-left: 3px solid var(--primary);
 }
 
+.stat-card.unknown { border-left-color: var(--text-light); }
 .stat-card.easy { border-left-color: var(--success); }
 .stat-card.medium { border-left-color: var(--warning); }
 .stat-card.hard { border-left-color: var(--danger); }
@@ -334,6 +335,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   color: #fff;
 }
 
+.badge-unknown { background: var(--text-light); }
 .badge-easy { background: var(--success); }
 .badge-medium { background: var(--warning); }
 .badge-hard { background: var(--danger); }
@@ -472,7 +474,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 /* Responsive */
 @media (max-width: 600px) {
-  .stats { grid-template-columns: repeat(4, 1fr); gap: .4rem; }
+  .stats { grid-template-columns: repeat(5, 1fr); gap: .3rem; }
   .stat-card { padding: .5rem .25rem; border-left-width: 2px; }
   .stat-card .stat-num { font-size: 1.3rem; }
   .stat-card .stat-label { font-size: .68rem; }
@@ -488,7 +490,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 <body>
 
 <header>
-  <h1>Line Dance <span>Verwaltung</span> <span style="font-size:.65rem;font-weight:400;opacity:.7;margin-left:.5rem">V0.92</span></h1>
+  <h1>Line Dance <span>Verwaltung</span> <span style="font-size:.65rem;font-weight:400;opacity:.7;margin-left:.5rem">V1.0</span></h1>
 </header>
 
 <div class="container">
@@ -498,6 +500,10 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     <div class="stat-card">
       <div class="stat-num" id="statTotal">0</div>
       <div class="stat-label">Gesamt</div>
+    </div>
+    <div class="stat-card unknown">
+      <div class="stat-num" id="statUnknown">0</div>
+      <div class="stat-label">Unbekannt</div>
     </div>
     <div class="stat-card easy">
       <div class="stat-num" id="statEasy">0</div>
@@ -529,7 +535,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
         <div class="form-group">
           <label for="danceDifficulty">Schwierigkeitsgrad *</label>
           <select id="danceDifficulty">
-            <option value="">— Bitte wählen —</option>
+            <option value="Unbekannt" selected>Unbekannt</option>
             <option value="Leicht">Leicht</option>
             <option value="Mittel">Mittel</option>
             <option value="Schwer">Schwer</option>
@@ -558,6 +564,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     </div>
     <select id="filterDifficulty" aria-label="Nach Schwierigkeitsgrad filtern">
       <option value="">Alle Schwierigkeitsgrade</option>
+      <option value="Unbekannt">Unbekannt</option>
       <option value="Leicht">Leicht</option>
       <option value="Mittel">Mittel</option>
       <option value="Schwer">Schwer</option>
@@ -798,7 +805,7 @@ document.addEventListener('keydown', e => {
 });
 
 // Filtering, sorting, rendering
-const diffOrder = { 'Leicht': 1, 'Mittel': 2, 'Schwer': 3 };
+const diffOrder = { 'Unbekannt': 0, 'Leicht': 1, 'Mittel': 2, 'Schwer': 3 };
 
 function getFiltered() {
   const q = searchInput.value.toLowerCase().trim();
@@ -824,7 +831,7 @@ function getFiltered() {
 }
 
 function badgeClass(d) {
-  return d === 'Leicht' ? 'badge-easy' : d === 'Mittel' ? 'badge-medium' : 'badge-hard';
+  return d === 'Unbekannt' ? 'badge-unknown' : d === 'Leicht' ? 'badge-easy' : d === 'Mittel' ? 'badge-medium' : 'badge-hard';
 }
 
 function escHtml(s) {
@@ -836,6 +843,7 @@ function escHtml(s) {
 function render() {
   // Stats
   $('statTotal').textContent = dances.length;
+  $('statUnknown').textContent = dances.filter(d => d.difficulty === 'Unbekannt').length;
   $('statEasy').textContent = dances.filter(d => d.difficulty === 'Leicht').length;
   $('statMedium').textContent = dances.filter(d => d.difficulty === 'Mittel').length;
   $('statHard').textContent = dances.filter(d => d.difficulty === 'Schwer').length;
