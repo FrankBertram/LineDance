@@ -105,15 +105,15 @@ header h1 span { font-weight: 300; opacity: .85; }
 .form-section {
   background: var(--card);
   border-radius: var(--radius);
-  padding: 1.5rem;
+  padding: .85rem 1rem;
   box-shadow: var(--shadow);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-title {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: .6rem;
   display: flex;
   align-items: center;
   gap: .5rem;
@@ -131,22 +131,22 @@ header h1 span { font-weight: 300; opacity: .85; }
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: .5rem .75rem;
 }
 
 .form-group { display: flex; flex-direction: column; }
 .form-group.full { grid-column: 1 / -1; }
 
 .form-group label {
-  font-size: .85rem;
+  font-size: .8rem;
   font-weight: 500;
-  margin-bottom: .3rem;
+  margin-bottom: .2rem;
   color: var(--text);
 }
 
 .form-group input,
 .form-group select {
-  padding: .6rem .75rem;
+  padding: .4rem .6rem;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   font-size: .95rem;
@@ -169,16 +169,16 @@ header h1 span { font-weight: 300; opacity: .85; }
 }
 
 .error-msg {
-  font-size: .78rem;
+  font-size: .75rem;
   color: var(--danger);
-  margin-top: .25rem;
+  margin-top: .15rem;
   min-height: 1.1em;
 }
 
 .form-actions {
   display: flex;
-  gap: .75rem;
-  margin-top: 1rem;
+  gap: .5rem;
+  margin-top: .6rem;
 }
 
 /* Buttons */
@@ -246,42 +246,46 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .toast.success { background: var(--success); }
 
 /* Search & Filter */
-.toolbar {
+.toolbar-row {
   display: flex;
   gap: .75rem;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.toolbar input[type="search"] {
+.toolbar-row:first-child { margin-bottom: .5rem; }
+.toolbar-row:last-child { margin-bottom: 1.25rem; }
+
+.toolbar-row input[type="search"] {
   flex: 1;
   min-width: 180px;
-  padding: .6rem .75rem;
+  padding: .45rem .75rem;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: .95rem;
+  font-size: .85rem;
+  line-height: 1;
   font-family: inherit;
   color: var(--text);
 }
 
-.toolbar input[type="search"]:focus {
+.toolbar-row input[type="search"]:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(79,70,229,.12);
 }
 
-.toolbar select {
-  padding: .6rem .75rem;
+.toolbar-row select {
+  padding: .45rem .75rem;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: .9rem;
+  font-size: .85rem;
+  line-height: 1;
   font-family: inherit;
   color: var(--text);
   background: #fff;
 }
 
-.toolbar select:focus {
+.toolbar-row select:focus {
   outline: none;
   border-color: var(--primary);
 }
@@ -362,6 +366,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .view-toggle button {
   padding: .45rem .7rem;
+  line-height: 1;
   border-radius: 0;
   background: #fff;
   color: var(--text-light);
@@ -499,8 +504,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   .dance-card { flex-direction: column; align-items: stretch; }
   .dance-thumb { width: 100%; height: auto; aspect-ratio: 16/9; }
   .dance-actions { justify-content: flex-end; }
-  .toolbar { flex-direction: column; }
-  .toolbar input[type="search"] { width: 100%; }
+  .toolbar-row input[type="search"] { width: 100%; min-width: 0; flex: 1; }
 }
 </style>
 </head>
@@ -573,30 +577,34 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
   </section>
 
   <!-- Toolbar -->
-  <section class="toolbar" aria-label="Suche und Filter">
-    <input type="search" id="searchInput" placeholder="Tanz suchen…" aria-label="Tanz suchen">
-    <div class="view-toggle" role="group" aria-label="Ansicht wechseln">
-      <button type="button" id="viewDetail" class="active" title="Detailliste" aria-pressed="true">&#9776; Detail</button>
-      <button type="button" id="viewCompact" title="Kompaktliste" aria-pressed="false">&#9868; Kompakt</button>
+  <section aria-label="Suche und Filter">
+    <div class="toolbar-row">
+      <input type="search" id="searchInput" placeholder="Tanz suchen…" aria-label="Tanz suchen">
+      <div class="view-toggle" role="group" aria-label="Playlist">
+        <button type="button" id="btnPlaylist" title="Playlist laden">&#9835; Playlist</button>
+        <button type="button" id="btnPlaylistClear" title="Playlist-Filter aufheben" style="display:none">&#10005;</button>
+      </div>
     </div>
-    <select id="filterDifficulty" aria-label="Nach Schwierigkeitsgrad filtern">
-      <option value="">Alle Schwierigkeitsgrade</option>
-      <option value="Unbekannt">Unbekannt</option>
-      <option value="Leicht">Leicht</option>
-      <option value="Mittel">Mittel</option>
-      <option value="Schwer">Schwer</option>
-    </select>
-    <div class="view-toggle" role="group" aria-label="Playlist">
-      <button type="button" id="btnPlaylist" title="Playlist laden">&#9835; Playlist</button>
-      <button type="button" id="btnPlaylistClear" title="Playlist-Filter aufheben" style="display:none">&#10005;</button>
+    <div class="toolbar-row">
+      <select id="filterDifficulty" aria-label="Nach Level filtern">
+        <option value="">Alle Level</option>
+        <option value="Unbekannt">Unbekannt</option>
+        <option value="Leicht">Leicht</option>
+        <option value="Mittel">Mittel</option>
+        <option value="Schwer">Schwer</option>
+      </select>
+      <select id="sortSelect" aria-label="Sortierung">
+        <option value="name-asc">Name A–Z</option>
+        <option value="name-desc">Name Z–A</option>
+        <option value="difficulty">Schwierigkeitsgrad</option>
+        <option value="date-desc">Neueste zuerst</option>
+        <option value="date-asc">Älteste zuerst</option>
+      </select>
+      <div class="view-toggle" role="group" aria-label="Ansicht wechseln">
+        <button type="button" id="viewDetail" class="active" title="Detailliste" aria-pressed="true">&#9776; Detail</button>
+        <button type="button" id="viewCompact" title="Kompaktliste" aria-pressed="false">&#9868; Kompakt</button>
+      </div>
     </div>
-    <select id="sortSelect" aria-label="Sortierung">
-      <option value="name-asc">Name A–Z</option>
-      <option value="name-desc">Name Z–A</option>
-      <option value="difficulty">Schwierigkeitsgrad</option>
-      <option value="date-desc">Neueste zuerst</option>
-      <option value="date-asc">Älteste zuerst</option>
-    </select>
   </section>
 
   <!-- Playlist info -->
@@ -846,9 +854,10 @@ document.addEventListener('keydown', e => {
 
 // Playlist filter
 let playlistNames = null;
+let lastPlaylistText = '';
 
 function openPlaylistDialog() {
-  $('playlistText').value = '';
+  $('playlistText').value = playlistNames ? lastPlaylistText : '';
   $('playlistOverlay').classList.add('show');
   $('playlistText').focus();
 }
@@ -860,6 +869,7 @@ function closePlaylistDialog() {
 function applyPlaylist(text) {
   const lines = text.split(/\r?\n/).map(l => l.trim().toLowerCase()).filter(l => l.length > 0);
   if (lines.length === 0) { showToast('Keine Tanznamen gefunden.'); return; }
+  lastPlaylistText = text;
   playlistNames = new Set(lines);
   $('btnPlaylist').classList.add('playlist-active');
   $('btnPlaylistClear').style.display = '';
@@ -891,6 +901,7 @@ $('filePlaylist').addEventListener('change', e => {
 
 $('btnPlaylistClear').addEventListener('click', () => {
   playlistNames = null;
+  lastPlaylistText = '';
   $('btnPlaylist').classList.remove('playlist-active');
   $('btnPlaylistClear').style.display = 'none';
   $('playlistInfo').style.display = 'none';
