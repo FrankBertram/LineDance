@@ -374,6 +374,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .view-toggle button:last-child { border-right: none; }
 .view-toggle button.active { background: var(--primary); color: #fff; }
 .view-toggle button:hover:not(.active) { background: var(--bg); }
+.view-toggle button.playlist-active { background: var(--success); color: #fff; }
 
 /* Compact view */
 .dance-list.compact { gap: .2rem; }
@@ -450,6 +451,17 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .dialog-actions { display: flex; gap: .5rem; justify-content: flex-end; }
 
+/* Playlist info */
+.playlist-info {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  border-radius: var(--radius-sm);
+  padding: .5rem .85rem;
+  font-size: .82rem;
+  margin-bottom: .75rem;
+}
+
 /* Backup section */
 .backup-section {
   background: var(--card);
@@ -495,7 +507,7 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 <body>
 
 <header>
-  <h1>Line Dance <span>Verwaltung</span> <span style="font-size:.65rem;font-weight:400;opacity:.7;margin-left:.5rem">V1.0</span></h1>
+  <h1>Line Dance <span>Verwaltung</span> <span style="font-size:.65rem;font-weight:400;opacity:.7;margin-left:.5rem">V1.1</span></h1>
 </header>
 
 <div class="container">
@@ -574,6 +586,10 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
       <option value="Mittel">Mittel</option>
       <option value="Schwer">Schwer</option>
     </select>
+    <div class="view-toggle" role="group" aria-label="Playlist">
+      <button type="button" id="btnPlaylist" title="Playlist laden">&#9835; Playlist</button>
+      <button type="button" id="btnPlaylistClear" title="Playlist-Filter aufheben" style="display:none">&#10005;</button>
+    </div>
     <select id="sortSelect" aria-label="Sortierung">
       <option value="name-asc">Name A–Z</option>
       <option value="name-desc">Name Z–A</option>
@@ -582,6 +598,9 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
       <option value="date-asc">Älteste zuerst</option>
     </select>
   </section>
+
+  <!-- Playlist info -->
+  <div id="playlistInfo" class="playlist-info" style="display:none" role="status"></div>
 
   <!-- Dance List -->
   <section id="danceList" class="dance-list" aria-label="Tanzliste"></section>
@@ -597,6 +616,22 @@ button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
     <p class="backup-hint">Export speichert alle Tänze als JSON-Datei. Beim Import kannst du wählen, ob bestehende Daten ersetzt oder ergänzt werden.</p>
   </section>
 
+</div>
+
+<!-- Playlist Dialog -->
+<div class="overlay" id="playlistOverlay" role="dialog" aria-modal="true" aria-labelledby="playlistTitle">
+  <div class="dialog" style="max-width:440px">
+    <h3 id="playlistTitle">Playlist laden</h3>
+    <p>Tanznamen einfügen (ein Name pro Zeile) oder TXT-Datei laden:</p>
+    <textarea id="playlistText" rows="8" placeholder="Watermelon Crawl&#10;Copperhead Road&#10;Boot Scootin Boogie&#10;…" style="width:100%;font-family:inherit;font-size:.9rem;padding:.5rem .65rem;border:1.5px solid var(--border);border-radius:var(--radius-sm);resize:vertical;"></textarea>
+    <div style="display:flex;align-items:center;gap:.5rem;margin-top:.6rem">
+      <button type="button" class="btn-secondary btn-sm" id="playlistLoadFile">TXT-Datei laden</button>
+      <input type="file" id="filePlaylist" accept=".txt,text/plain" hidden>
+      <span style="flex:1"></span>
+      <button type="button" class="btn-secondary btn-sm" id="playlistCancel">Abbrechen</button>
+      <button type="button" class="btn-primary btn-sm" id="playlistApply">Anwenden</button>
+    </div>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -803,10 +838,64 @@ $('confirmOverlay').addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('confirmOverlay').classList.contains('show')) {
-    deleteId = null;
-    $('confirmOverlay').classList.remove('show');
+  if (e.key === 'Escape') {
+    if ($('playlistOverlay').classList.contains('show')) closePlaylistDialog();
+    else if ($('confirmOverlay').classList.contains('show')) { deleteId = null; $('confirmOverlay').classList.remove('show'); }
   }
+});
+
+// Playlist filter
+let playlistNames = null;
+
+function openPlaylistDialog() {
+  $('playlistText').value = '';
+  $('playlistOverlay').classList.add('show');
+  $('playlistText').focus();
+}
+
+function closePlaylistDialog() {
+  $('playlistOverlay').classList.remove('show');
+}
+
+function applyPlaylist(text) {
+  const lines = text.split(/\r?\n/).map(l => l.trim().toLowerCase()).filter(l => l.length > 0);
+  if (lines.length === 0) { showToast('Keine Tanznamen gefunden.'); return; }
+  playlistNames = new Set(lines);
+  $('btnPlaylist').classList.add('playlist-active');
+  $('btnPlaylistClear').style.display = '';
+  const matched = dances.filter(d => playlistNames.has(d.name.toLowerCase())).length;
+  const missing = lines.filter(n => !dances.some(d => d.name.toLowerCase() === n));
+  let info = `Playlist aktiv: ${matched} von ${lines.length} Tänzen gefunden.`;
+  if (missing.length > 0 && missing.length <= 10) info += ` Nicht gefunden: ${missing.join(', ')}`;
+  else if (missing.length > 10) info += ` ${missing.length} Tänze nicht gefunden.`;
+  $('playlistInfo').textContent = info;
+  $('playlistInfo').style.display = '';
+  showToast(`Playlist mit ${lines.length} Einträgen geladen.`, 'success');
+  closePlaylistDialog();
+  render();
+}
+
+$('btnPlaylist').addEventListener('click', openPlaylistDialog);
+$('playlistCancel').addEventListener('click', closePlaylistDialog);
+$('playlistOverlay').addEventListener('click', e => { if (e.target === $('playlistOverlay')) closePlaylistDialog(); });
+$('playlistApply').addEventListener('click', () => applyPlaylist($('playlistText').value));
+
+$('playlistLoadFile').addEventListener('click', () => { $('filePlaylist').value = ''; $('filePlaylist').click(); });
+$('filePlaylist').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => { $('playlistText').value = ev.target.result; };
+  reader.readAsText(file);
+});
+
+$('btnPlaylistClear').addEventListener('click', () => {
+  playlistNames = null;
+  $('btnPlaylist').classList.remove('playlist-active');
+  $('btnPlaylistClear').style.display = 'none';
+  $('playlistInfo').style.display = 'none';
+  render();
+  showToast('Playlist-Filter aufgehoben.');
 });
 
 // Filtering, sorting, rendering
@@ -816,6 +905,7 @@ function getFiltered() {
   const q = searchInput.value.toLowerCase().trim();
   const diff = filterDifficulty.value;
   let list = dances.filter(d => {
+    if (playlistNames && !playlistNames.has(d.name.toLowerCase())) return false;
     if (q && !d.name.toLowerCase().includes(q)) return false;
     if (diff && d.difficulty !== diff) return false;
     return true;
